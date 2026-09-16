@@ -14,10 +14,10 @@ The final response includes a temporary link to the screen recording.
 
 - **`browser_start()`** — Launches Chromium with screen recording enabled.
 - **`browser_navigate(url)`** — Navigates the page to `url`.
-- **`browser_snapshot()`** — Returns an accessibility/DOM-style tree of the page. Interactive elements are tagged with a `[ref=e3]` that `browser_click`/`browser_type` can target.
+- **`browser_snapshot()`** — Returns an accessibility/DOM-style tree of the page.
 - **`browser_click(ref)`** — Clicks the element with the given ref.
 - **`browser_type(ref, text)`** — Types text into the element with the given ref.
-- **`browser_end()`** — Closes the browser, finalizes the screen recording, uploads it to the bucket, and returns a temporary (7-day) signed URL to watch it.
+- **`browser_end()`** — Closes the browser, finalizes the screen recording, and returns a URL to watch it.
 
 > [!NOTE]
 > Only one browser session is allowed at a time per MCP session — call `browser_end()` before starting another.
