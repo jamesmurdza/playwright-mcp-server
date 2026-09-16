@@ -14,16 +14,15 @@ One browser per MCP session. No database, queue, or volume — just this service
 
 ## Available tools
 
-| Tool | Description |
-| --- | --- |
-| `browser_start()` | Launches Chromium with video recording enabled. Call once per MCP session. |
-| `browser_navigate(url)` | Navigates the page to `url`. |
-| `browser_snapshot()` | Returns an accessibility/DOM-style tree of the page. Interactive elements are tagged with a `[ref=e3]` that `browser_click`/`browser_type` can target — far more reliable for an agent than clicking on screenshot coordinates. |
-| `browser_click(ref)` | Clicks the element with the given ref. |
-| `browser_type(ref, text)` | Types text into the element with the given ref. |
-| `browser_end()` | Closes the browser, finalizes the recording, uploads it to the bucket, and returns a temporary (7-day) signed URL to watch it. |
+- **`browser_start()`** — Launches Chromium with video recording enabled. Call once per MCP session.
+- **`browser_navigate(url)`** — Navigates the page to `url`.
+- **`browser_snapshot()`** — Returns an accessibility/DOM-style tree of the page. Interactive elements are tagged with a `[ref=e3]` that `browser_click`/`browser_type` can target — far more reliable for an agent than clicking on screenshot coordinates.
+- **`browser_click(ref)`** — Clicks the element with the given ref.
+- **`browser_type(ref, text)`** — Types text into the element with the given ref.
+- **`browser_end()`** — Closes the browser, finalizes the recording, uploads it to the bucket, and returns a temporary (7-day) signed URL to watch it.
 
-Only one browser session is allowed at a time per MCP session — call `browser_end()` before starting another.
+> [!NOTE]
+> Only one browser session is allowed at a time per MCP session — call `browser_end()` before starting another.
 
 ## Deploying on Railway
 
