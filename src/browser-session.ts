@@ -62,6 +62,18 @@ export class BrowserSession {
   }
 
   /**
+   * Waits for an in-flight navigation to settle, bounded by a short
+   * timeout. Playwright's click()/fill() only wait for a navigation to
+   * *start* if the action triggers one (e.g. a form submit), not for it
+   * to finish -- so a screenshot taken right after can land mid-transition
+   * and fail. Best-effort: ignored on timeout so it never stalls an action
+   * that didn't navigate, or blocks one that's slow to settle.
+   */
+  private async settle(page: Page): Promise<void> {
+    await page.waitForLoadState("domcontentloaded", { timeout: 5000 }).catch(() => {});
+  }
+
+  /**
    * Screenshots a step and uploads it, mirroring how browser_end() ships
    * the video recording. Never throws: a screenshot (or its upload) is a
    * bonus on top of navigate/click/type, not the point of the call, so a
@@ -110,6 +122,7 @@ export class BrowserSession {
       );
     }
     await locator.first().click();
+    await this.settle(page);
     return { clicked: ref, screenshot: await this.captureScreenshot(page) };
   }
 
@@ -130,6 +143,7 @@ export class BrowserSession {
       await el.click();
       await el.pressSequentially(text);
     }
+    await this.settle(page);
     return { typed: ref, screenshot: await this.captureScreenshot(page) };
   }
 
