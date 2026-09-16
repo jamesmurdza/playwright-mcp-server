@@ -62,7 +62,7 @@ graph LR
    npm install
    npx playwright install --with-deps chromium
    ```
-3. Copy `.env.example` to `.env`.
+3. Copy `.env.example` to `.env`. Add your bucket credentials here if you want `browser_end()`'s upload to work locally.
 4. Start the server:
    ```
    npm run dev
