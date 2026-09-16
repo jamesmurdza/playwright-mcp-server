@@ -1,162 +1,79 @@
 # Remote Playwright MCP
 
-A remote MCP server that lets an agent drive a real Chromium browser over HTTP — every session is screen-recorded, and the recording is uploaded to a Railway Bucket when the session ends.
+A remote MCP server for operating a real Chromium browser via Playwright, with session screen recordings stored automatically.
 
-## What it does
+## Usage
 
-The server exposes a small set of [MCP](https://modelcontextprotocol.io) tools over Streamable HTTP. An MCP client (Claude, an agent framework, your own code) connects, calls `browser_start`, drives the page with `browser_navigate` / `browser_snapshot` / `browser_click` / `browser_type`, and calls `browser_end` when it's done. The whole session is recorded as a `.webm` video by Playwright and uploaded to an S3-compatible bucket.
+Ask your agent something like:
 
-v1 is intentionally minimal: **one browser per MCP session**, no session manager, no database, no queue. It's meant to be small enough to read end to end in one sitting.
+> "Open example.com, click 'More information', then end the browser session."
+
+The final response includes a temporary link to the screen recording.
 
 ## Available tools
 
-| Tool | Description |
-| --- | --- |
-| `browser_start()` | Launches Chromium with video recording enabled. Call once per MCP session. |
-| `browser_navigate(url)` | Navigates the page to `url`. |
-| `browser_snapshot()` | Returns an accessibility/DOM-style tree of the page. Interactive elements are tagged with a `[ref=e3]` that `browser_click`/`browser_type` can target — this is far more reliable for an agent than clicking on screenshot coordinates. |
-| `browser_click(ref)` | Clicks the element with the given ref. |
-| `browser_type(ref, text)` | Types text into the element with the given ref. |
-| `browser_end()` | Closes the browser, finalizes the recording, uploads it to the bucket, and returns where it landed. |
+- **`browser_start()`** — Launches Chromium with screen recording enabled.
+- **`browser_navigate(url)`** — Navigates the page to `url`.
+- **`browser_snapshot()`** — Returns an accessibility/DOM-style tree of the page.
+- **`browser_click(ref)`** — Clicks the element with the given ref.
+- **`browser_type(ref, text)`** — Types text into the element with the given ref.
+- **`browser_end()`** — Closes the browser, finalizes the screen recording, and returns a URL to watch it.
 
-Only one browser session is allowed at a time per MCP session — call `browser_end()` before starting another.
+> [!NOTE]
+> Only one browser session is allowed at a time per MCP session — call `browser_end()` before starting another.
 
-## Run locally
+## Architecture
+
+The app is a single Node process that speaks MCP over HTTP and drives Chromium directly, one browser per session. The bucket is the only other piece of infrastructure, storing each session's screen recording once uploaded.
+
+```mermaid
+graph LR
+    Client["MCP Client"] -->|"POST /mcp"| Server["Playwright MCP<br/>Node + Chromium"]
+    subgraph "Railway Project"
+        Server -->|"S3 API"| Bucket[("Railway Bucket<br/>recordings/*.webm")]
+    end
+```
+
+## Deploying on Railway
+
+1. Create a new Railway project.
+2. Deploy this GitHub repo into it — Railway detects the `Dockerfile` automatically.
+3. Add a **Bucket** to the project.
+4. On the app service, go to **Variables → Connect Service to Bucket**, pick the bucket, choose the **AWS SDK (Generic)** style, and click **Add Variables**.
+5. Set `MCP_API_KEY` on the service.
+6. Generate a public domain (Settings → Networking → Generate Domain). Your MCP endpoint is `https://<your-domain>.up.railway.app/mcp`.
+7. Connect an MCP client to it:
+   ```json
+   {
+     "mcpServers": {
+       "playwright-remote": {
+         "url": "https://<your-domain>.up.railway.app/mcp",
+         "headers": { "Authorization": "Bearer <MCP_API_KEY>" }
+       }
+     }
+   }
+   ```
+
+## Running Locally
 
 1. Clone this repo.
-2. Install dependencies (this also needs the Playwright browser binaries):
+2. Install dependencies and the Playwright browser binaries:
    ```
    npm install
    npx playwright install --with-deps chromium
    ```
-3. Copy `.env.example` to `.env` and fill in your bucket credentials (see [Configuration](#configuration)). You can skip the bucket variables while developing everything except `browser_end`.
-4. Start the dev server:
+3. Copy `.env.example` to `.env`. Add your bucket credentials here if you want `browser_end()`'s upload to work locally.
+4. Start the server:
    ```
    npm run dev
    ```
-5. Server is up at `http://localhost:8080` — `GET /health` should return `200 OK`, and the MCP endpoint is `POST /mcp`.
-
-## Deploy to Railway
-
-1. Create a new Railway project.
-2. Deploy this GitHub repo into it (Railway detects the `Dockerfile` automatically).
-3. Add a **Bucket** to the project from the Railway dashboard.
-4. On the app service, go to **Variables → Connect Service to Bucket**, pick the bucket, choose the **AWS SDK (Generic)** style, and click **Add Variables**. This writes `AWS_ENDPOINT_URL`, `AWS_S3_BUCKET_NAME`, `AWS_DEFAULT_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` directly onto the service — nothing to copy or retype.
-5. Generate a public domain for the service (Settings → Networking → Generate Domain).
-6. Your MCP endpoint is:
+5. Connect an MCP client to it:
+   ```json
+   {
+     "mcpServers": {
+       "playwright-remote": {
+         "url": "http://localhost:8080/mcp"
+       }
+     }
+   }
    ```
-   https://<your-domain>.up.railway.app/mcp
-   ```
-
-Railway injects `PORT` automatically; the server reads it directly.
-
-## Connect an MCP client
-
-Most MCP clients support remote Streamable HTTP servers by URL. For example, in a client config file:
-
-```json
-{
-  "mcpServers": {
-    "playwright-remote": {
-      "url": "https://<your-domain>.up.railway.app/mcp",
-      "headers": {
-        "Authorization": "Bearer <MCP_API_KEY, if you set one>"
-      }
-    }
-  }
-}
-```
-
-Drop the `headers` block if you didn't set `MCP_API_KEY`.
-
-## Try it
-
-Once connected, ask your agent:
-
-> "Open example.com, click 'More information', then end the browser session."
-
-The agent will call `browser_start` → `browser_navigate` → `browser_snapshot` → `browser_click` → `browser_end`, and the final response will include a link to watch the recording:
-
-```json
-{
-  "recording": {
-    "bucket": "your-bucket-name",
-    "key": "recordings/<session-id>-<file>.webm",
-    "bytes": 547607,
-    "url": "https://.../your-bucket-name/recordings/....webm?X-Amz-Algorithm=...",
-    "expiresAt": "2026-09-23T07:20:00.000Z"
-  }
-}
-```
-
-## Recordings
-
-- Recordings are written to `/tmp/videos/<session-id>/` while the browser is running — this is scratch space only, not a persistent volume.
-- On `browser_end()`, the video is finalized and uploaded to `recordings/<session-id>-<file>.webm` in your bucket, and the local temp file/directory is deleted.
-- Railway Buckets aren't publicly readable, so `browser_end()` doesn't just return the bucket/key — it returns a **presigned URL** (`url`) that's directly openable in a browser without any credentials, valid until `expiresAt` (7 days from upload, the maximum a SigV4 presigned URL supports). Generate a fresh one later by presigning `GetObject` for the same `bucket`/`key` if you need longer-lived access.
-- If an MCP client disconnects without calling `browser_end()` (e.g. it crashes), the server still closes the browser and deletes the local temp recording on session teardown — but in that case the video is **not** uploaded, since there was no clean `browser_end()` call to trigger it. Always call `browser_end()` when you're finished.
-
-## Architecture
-
-```
-Railway Project
-
-┌───────────────────────┐
-│ Playwright MCP         │
-│                         │
-│ Node + Chromium         │
-│ POST /mcp                │
-│ GET  /health               │
-└───────────┬───────────┘
-            │
-            │ S3 API
-            ▼
-┌───────────────────────┐
-│ Railway Bucket          │
-│                         │
-│ recordings/*.webm        │
-└───────────────────────┘
-```
-
-No database, Redis, worker, or volume. One process, one browser per MCP session, one bucket.
-
-## Configuration
-
-| Variable | Description |
-| --- | --- |
-| `PORT` | Port to listen on. Provided by Railway automatically. |
-| `AWS_ENDPOINT_URL` | S3-compatible endpoint for your Railway Bucket. |
-| `AWS_S3_BUCKET_NAME` | Bucket name. |
-| `AWS_ACCESS_KEY_ID` | Access key credential. |
-| `AWS_SECRET_ACCESS_KEY` | Secret key credential. |
-| `AWS_DEFAULT_REGION` | Bucket region (defaults to `auto` if unset). |
-| `MCP_API_KEY` | Optional. If set, `/mcp` requires `Authorization: Bearer <MCP_API_KEY>` on every request. |
-
-These five `AWS_*` names aren't an arbitrary choice — they're exactly what Railway's Bucket **"Connect Service to Bucket" → "AWS SDK (Generic)"** button writes onto a service, so wiring a bucket up on Railway is one click, not five copy-pastes. They also happen to be the AWS SDK's own conventional variable names, so the same `.env` works against real AWS S3 or any other S3-compatible provider that follows the convention (e.g. Cloudflare R2).
-
-## Security
-
-**Do not expose an unauthenticated browser MCP server to the public internet in production.** Anyone who can reach `/mcp` can drive a real browser from your infrastructure — set `MCP_API_KEY` (or put the service behind your own auth/gateway) before sharing the URL outside your own testing.
-
-## Development
-
-- `npm run dev` — run with hot reload (`tsx watch`).
-- `npm run build` — type-check and compile to `dist/`.
-- `npm start` — run the compiled server (what the Docker image runs).
-- `npm run typecheck` — type-check without emitting.
-
-Project layout:
-
-```
-src/
-  index.ts             Express app: POST /mcp, GET /health, session/transport wiring
-  mcp-server.ts        MCP tool definitions, one McpServer per session
-  browser-session.ts   Playwright lifecycle: launch, snapshot, click, type, end
-  bucket.ts            S3 upload
-  config.ts            Environment variable loading
-Dockerfile              Based on mcr.microsoft.com/playwright, pinned to the playwright npm version
-```
-
-## License
-
-MIT

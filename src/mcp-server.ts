@@ -37,7 +37,7 @@ export function createMcpServer(session: BrowserSession): McpServer {
     {
       title: "Start browser",
       description:
-        "Launches a Chromium browser with video recording enabled. Call this once before any other browser_* tool. Only one browser session is allowed per MCP session -- call browser_end() before starting another.",
+        "Launches a Chromium browser with screen recording enabled. Call this once before any other browser_* tool. Only one browser session is allowed per MCP session -- call browser_end() before starting another.",
       inputSchema: {},
     },
     () => run(() => session.start()),
@@ -97,7 +97,7 @@ export function createMcpServer(session: BrowserSession): McpServer {
     {
       title: "End browser session",
       description:
-        "Closes the browser, finalizes the video recording, uploads it to the configured bucket, and returns a temporary (7-day) signed URL to watch or download it. Always call this when you're done, even if something went wrong, so the recording isn't lost.",
+        "Closes the browser, finalizes the screen recording, uploads it to the configured bucket, and returns a temporary (7-day) signed URL to watch or download it. Always call this when you're done, even if something went wrong, so the screen recording isn't lost.",
       inputSchema: {},
     },
     () => run(() => session.end()),
