@@ -54,7 +54,7 @@ graph LR
    }
    ```
 
-## Running Locally
+## Running locally
 
 1. Clone this repo.
 2. Install dependencies and the Playwright browser binaries:
