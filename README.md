@@ -29,9 +29,7 @@ The app is a single Node process that speaks MCP over HTTP and drives Chromium d
 ```mermaid
 graph LR
     Client["MCP Client"] -->|"POST /mcp"| Server["Playwright MCP<br/>Node + Chromium"]
-    subgraph "Railway Project"
-        Server -->|"S3 API"| Bucket[("Railway Bucket<br/>recordings/*.webm")]
-    end
+    Server -->|"S3 API"| Bucket[("Bucket<br/>recordings/*.webm")]
 ```
 
 ## Deploying on Railway
