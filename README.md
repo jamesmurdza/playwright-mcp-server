@@ -40,7 +40,7 @@ graph LR
 2. Deploy this GitHub repo into it — Railway detects the `Dockerfile` automatically.
 3. Add a **Bucket** to the project.
 4. On the app service, go to **Variables → Connect Service to Bucket**, pick the bucket, choose the **AWS SDK (Generic)** style, and click **Add Variables**.
-5. Set `MCP_API_KEY` on the service before generating a public domain.
+5. Set `MCP_API_KEY` on the service.
 6. Generate a public domain (Settings → Networking → Generate Domain). Your MCP endpoint is `https://<your-domain>.up.railway.app/mcp`.
 7. Connect an MCP client to it:
    ```json
