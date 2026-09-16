@@ -1,6 +1,6 @@
 # Remote Playwright MCP
 
-A remote MCP server for operating a real Chromium browser via Playwright, with session screen recordings stored automatically.
+A remote MCP server for operating a real Chromium browser via Playwright while automatically saving screenshots and screen recordings.
 
 ## Usage
 

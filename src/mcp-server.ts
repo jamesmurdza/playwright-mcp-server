@@ -47,7 +47,8 @@ export function createMcpServer(session: BrowserSession): McpServer {
     "browser_navigate",
     {
       title: "Navigate",
-      description: "Navigates the current page to the given URL.",
+      description:
+        "Navigates the current page to the given URL. The result includes a link to a screenshot taken after navigating.",
       inputSchema: {
         url: z.string().url().describe("Absolute URL to navigate to, e.g. https://example.com"),
       },
@@ -70,7 +71,8 @@ export function createMcpServer(session: BrowserSession): McpServer {
     "browser_click",
     {
       title: "Click",
-      description: "Clicks the element identified by `ref`, as returned by browser_snapshot().",
+      description:
+        "Clicks the element identified by `ref`, as returned by browser_snapshot(). The result includes a link to a screenshot taken after the click.",
       inputSchema: {
         ref: z.string().describe('Element ref from the latest browser_snapshot(), e.g. "e3"'),
       },
@@ -83,7 +85,7 @@ export function createMcpServer(session: BrowserSession): McpServer {
     {
       title: "Type",
       description:
-        "Types text into the element identified by `ref`, as returned by browser_snapshot(). Replaces the element's existing value.",
+        "Types text into the element identified by `ref`, as returned by browser_snapshot(). Replaces the element's existing value. The result includes a link to a screenshot taken after typing.",
       inputSchema: {
         ref: z.string().describe('Element ref from the latest browser_snapshot(), e.g. "e5"'),
         text: z.string().describe("Text to type into the element"),
