@@ -41,7 +41,7 @@ Only one browser session is allowed at a time per MCP session — call `browser_
 1. Create a new Railway project.
 2. Deploy this GitHub repo into it (Railway detects the `Dockerfile` automatically).
 3. Add a **Bucket** to the project from the Railway dashboard.
-4. Open the bucket's "Connect" tab and copy its credentials into the service's variables: `BUCKET_ENDPOINT`, `BUCKET_NAME`, `BUCKET_ACCESS_KEY`, `BUCKET_SECRET_KEY`, `BUCKET_REGION`.
+4. On the app service, go to **Variables → Connect Service to Bucket**, pick the bucket, choose the **AWS SDK (Generic)** style, and click **Add Variables**. This writes `AWS_ENDPOINT_URL`, `AWS_S3_BUCKET_NAME`, `AWS_DEFAULT_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` directly onto the service — nothing to copy or retype.
 5. Generate a public domain for the service (Settings → Networking → Generate Domain).
 6. Your MCP endpoint is:
    ```
@@ -112,12 +112,14 @@ No database, Redis, worker, or volume. One process, one browser per MCP session,
 | Variable | Description |
 | --- | --- |
 | `PORT` | Port to listen on. Provided by Railway automatically. |
-| `BUCKET_ENDPOINT` | S3-compatible endpoint for your Railway Bucket. |
-| `BUCKET_NAME` | Bucket name. |
-| `BUCKET_ACCESS_KEY` | Access key credential. |
-| `BUCKET_SECRET_KEY` | Secret key credential. |
-| `BUCKET_REGION` | Bucket region (defaults to `auto`). |
+| `AWS_ENDPOINT_URL` | S3-compatible endpoint for your Railway Bucket. |
+| `AWS_S3_BUCKET_NAME` | Bucket name. |
+| `AWS_ACCESS_KEY_ID` | Access key credential. |
+| `AWS_SECRET_ACCESS_KEY` | Secret key credential. |
+| `AWS_DEFAULT_REGION` | Bucket region (defaults to `auto` if unset). |
 | `MCP_API_KEY` | Optional. If set, `/mcp` requires `Authorization: Bearer <MCP_API_KEY>` on every request. |
+
+These five `AWS_*` names aren't an arbitrary choice — they're exactly what Railway's Bucket **"Connect Service to Bucket" → "AWS SDK (Generic)"** button writes onto a service, so wiring a bucket up on Railway is one click, not five copy-pastes. They also happen to be the AWS SDK's own conventional variable names, so the same `.env` works against real AWS S3 or any other S3-compatible provider that follows the convention (e.g. Cloudflare R2).
 
 ## Security
 

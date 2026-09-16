@@ -15,22 +15,24 @@ export const config = {
   // a Bearer token. When unset, the server runs unauthenticated (fine for
   // local development, NOT fine for a public deployment).
   mcpApiKey: process.env.MCP_API_KEY,
-
-  bucket: {
-    endpoint: process.env.BUCKET_ENDPOINT,
-    name: process.env.BUCKET_NAME,
-    accessKeyId: process.env.BUCKET_ACCESS_KEY,
-    secretAccessKey: process.env.BUCKET_SECRET_KEY,
-    region: process.env.BUCKET_REGION ?? "auto",
-  },
 };
 
+// These five names are exactly what Railway's Bucket "Connect Service to
+// Bucket -> AWS SDK (Generic)" button writes onto a service -- so wiring a
+// bucket up is "click the button", not "copy five values by hand".
+//
+// Note: they're read explicitly here (rather than leaning on the AWS SDK's
+// own env var auto-resolution) on purpose. The SDK's default region
+// resolver only reads AWS_REGION, not AWS_DEFAULT_REGION, so relying on
+// implicit resolution would silently fail against Railway's preset. Explicit
+// reads also give a clear "which variable is missing" error instead of the
+// SDK's generic "could not load credentials" message.
 export function loadBucketConfigOrThrow() {
   return {
-    endpoint: required("BUCKET_ENDPOINT"),
-    name: required("BUCKET_NAME"),
-    accessKeyId: required("BUCKET_ACCESS_KEY"),
-    secretAccessKey: required("BUCKET_SECRET_KEY"),
-    region: process.env.BUCKET_REGION ?? "auto",
+    endpoint: required("AWS_ENDPOINT_URL"),
+    bucketName: required("AWS_S3_BUCKET_NAME"),
+    accessKeyId: required("AWS_ACCESS_KEY_ID"),
+    secretAccessKey: required("AWS_SECRET_ACCESS_KEY"),
+    region: process.env.AWS_DEFAULT_REGION ?? "auto",
   };
 }
