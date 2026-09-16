@@ -9,7 +9,8 @@ let bucketName: string | null = null;
 /**
  * Lazily creates the S3 client. Railway Buckets speak the S3 API, so the
  * stock AWS SDK works against them unmodified -- point it at the bucket's
- * endpoint and force path-style addressing.
+ * endpoint and force path-style addressing (Railway's endpoint doesn't do
+ * virtual-hosted-style bucket subdomains).
  */
 function getClient(): { client: S3Client; bucketName: string } {
   if (!client || !bucketName) {
@@ -23,7 +24,7 @@ function getClient(): { client: S3Client; bucketName: string } {
         secretAccessKey: cfg.secretAccessKey,
       },
     });
-    bucketName = cfg.name;
+    bucketName = cfg.bucketName;
   }
   return { client, bucketName };
 }
