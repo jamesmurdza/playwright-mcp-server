@@ -1,6 +1,6 @@
 # Remote Playwright MCP
 
-A remote MCP server that lets an agent drive a real Chromium browser over HTTP — every session is recorded and uploaded to a Railway Bucket when it ends.
+A remote MCP server for operating a real Chromium browser via Playwright, with session recordings stored automatically.
 
 ```mermaid
 graph LR
@@ -10,7 +10,13 @@ graph LR
     end
 ```
 
-One browser per MCP session. No database, queue, or volume — just this service and a bucket.
+## Usage
+
+Ask your agent something like:
+
+> "Open example.com, click 'More information', then end the browser session."
+
+It calls `browser_start → browser_navigate → browser_snapshot → browser_click → browser_end`, and the final response includes a temporary link to the recording.
 
 ## Available tools
 
@@ -30,8 +36,9 @@ One browser per MCP session. No database, queue, or volume — just this service
 2. Deploy this GitHub repo into it — Railway detects the `Dockerfile` automatically.
 3. Add a **Bucket** to the project.
 4. On the app service, go to **Variables → Connect Service to Bucket**, pick the bucket, choose the **AWS SDK (Generic)** style, and click **Add Variables**. This sets `AWS_ENDPOINT_URL`, `AWS_S3_BUCKET_NAME`, `AWS_DEFAULT_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` on the service directly — nothing to copy by hand.
-5. Generate a public domain (Settings → Networking → Generate Domain). Your MCP endpoint is `https://<your-domain>.up.railway.app/mcp`.
-6. **Before sharing that URL with anyone**, set `MCP_API_KEY` on the service — anyone who can reach `/mcp` can drive a real browser on your infrastructure. Then point an MCP client at it:
+5. Set `MCP_API_KEY` on the service, before it's reachable from the internet — anyone who can reach `/mcp` can drive a real browser on your infrastructure.
+6. Generate a public domain (Settings → Networking → Generate Domain). Your MCP endpoint is `https://<your-domain>.up.railway.app/mcp`.
+7. Connect an MCP client to it:
    ```json
    {
      "mcpServers": {
@@ -42,7 +49,6 @@ One browser per MCP session. No database, queue, or volume — just this service
      }
    }
    ```
-7. Try it — ask your agent: *"Open example.com, click 'More information', then end the browser session."* It calls `browser_start → browser_navigate → browser_snapshot → browser_click → browser_end`, and the response includes a link to the recording.
 
 ## Running Locally
 
@@ -58,4 +64,13 @@ One browser per MCP session. No database, queue, or volume — just this service
    npm run dev
    ```
    It's up at `http://localhost:8080` — `GET /health` returns `200 OK`, and the MCP endpoint is `POST /mcp`.
-5. Point a client at it with the same config as above, but `"url": "http://localhost:8080/mcp"` and no `Authorization` header.
+5. Connect an MCP client to it:
+   ```json
+   {
+     "mcpServers": {
+       "playwright-remote": {
+         "url": "http://localhost:8080/mcp"
+       }
+     }
+   }
+   ```
