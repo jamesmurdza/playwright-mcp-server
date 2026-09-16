@@ -65,7 +65,6 @@ graph LR
    ```
    npm run dev
    ```
-   It's up at `http://localhost:8080` — `GET /health` returns `200 OK`, and the MCP endpoint is `POST /mcp`.
 5. Connect an MCP client to it:
    ```json
    {
