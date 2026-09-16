@@ -35,7 +35,7 @@ The final response includes a temporary link to the recording.
 1. Create a new Railway project.
 2. Deploy this GitHub repo into it — Railway detects the `Dockerfile` automatically.
 3. Add a **Bucket** to the project.
-4. On the app service, go to **Variables → Connect Service to Bucket**, pick the bucket, choose the **AWS SDK (Generic)** style, and click **Add Variables**. This sets `AWS_ENDPOINT_URL`, `AWS_S3_BUCKET_NAME`, `AWS_DEFAULT_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` on the service directly.
+4. On the app service, go to **Variables → Connect Service to Bucket**, pick the bucket, choose the **AWS SDK (Generic)** style, and click **Add Variables**.
 5. Set `MCP_API_KEY` on the service before generating a public domain.
 6. Generate a public domain (Settings → Networking → Generate Domain). Your MCP endpoint is `https://<your-domain>.up.railway.app/mcp`.
 7. Connect an MCP client to it:
