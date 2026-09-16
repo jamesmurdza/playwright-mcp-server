@@ -24,6 +24,8 @@ The final response includes a temporary link to the screen recording.
 
 ## Architecture
 
+The app is a single Node process that speaks MCP over HTTP and drives Chromium directly, one browser per session. The bucket is the only other moving part — no database, queue, or persistent volume.
+
 ```mermaid
 graph LR
     Client["MCP Client"] -->|"POST /mcp"| Server["Playwright MCP<br/>Node + Chromium"]
