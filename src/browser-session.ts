@@ -1,7 +1,7 @@
 import { mkdir, rm, unlink } from "node:fs/promises";
 import path from "node:path";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
-import { uploadRecording, type UploadResult } from "./bucket.js";
+import { uploadRecording, uploadScreenshot, type UploadResult } from "./bucket.js";
 
 export class BrowserSessionError extends Error {}
 
@@ -19,6 +19,7 @@ export class BrowserSession {
   private readonly videoDir: string;
   private started = false;
   private ended = false;
+  private screenshotCount = 0;
 
   constructor(private readonly sessionId: string) {
     this.videoDir = path.join("/tmp/videos", sessionId);
@@ -60,6 +61,25 @@ export class BrowserSession {
     return page.locator(`[data-mcp-ref="${ref}"]`);
   }
 
+  /**
+   * Screenshots a step and uploads it, mirroring how browser_end() ships
+   * the video recording. Never throws: a screenshot (or its upload) is a
+   * bonus on top of navigate/click/type, not the point of the call, so a
+   * failure here -- most commonly no bucket configured, which is fine for
+   * local dev -- just means this step's result omits `screenshot` rather
+   * than failing the underlying browser action.
+   */
+  private async captureScreenshot(page: Page): Promise<UploadResult | null> {
+    try {
+      const buffer = await page.screenshot({ type: "jpeg", quality: 70 });
+      const key = `${this.sessionId}-${++this.screenshotCount}.jpg`;
+      return await uploadScreenshot(buffer, key);
+    } catch (error) {
+      console.error("[browser-session] screenshot upload failed:", error);
+      return null;
+    }
+  }
+
   async navigate(url: string) {
     const page = this.assertActive();
     const response = await page.goto(url, { waitUntil: "domcontentloaded" });
@@ -67,6 +87,7 @@ export class BrowserSession {
       url: page.url(),
       status: response ? response.status() : null,
       title: await page.title(),
+      screenshot: await this.captureScreenshot(page),
     };
   }
 
@@ -89,7 +110,7 @@ export class BrowserSession {
       );
     }
     await locator.first().click();
-    return { clicked: ref };
+    return { clicked: ref, screenshot: await this.captureScreenshot(page) };
   }
 
   async type(ref: string, text: string) {
@@ -109,7 +130,7 @@ export class BrowserSession {
       await el.click();
       await el.pressSequentially(text);
     }
-    return { typed: ref };
+    return { typed: ref, screenshot: await this.captureScreenshot(page) };
   }
 
   async end(): Promise<{ recording: UploadResult | null }> {

@@ -15,10 +15,10 @@ https://github.com/user-attachments/assets/41c43cee-6e5b-422b-a5b2-e079db11402d
 ## Available tools
 
 - **`browser_start()`** — Launches Chromium with screen recording enabled.
-- **`browser_navigate(url)`** — Navigates the page to `url`.
+- **`browser_navigate(url)`** — Navigates the page to `url` and returns a URL to a screenshot of the result.
 - **`browser_snapshot()`** — Returns an accessibility/DOM-style tree of the page.
-- **`browser_click(ref)`** — Clicks the element with the given ref.
-- **`browser_type(ref, text)`** — Types text into the element with the given ref.
+- **`browser_click(ref)`** — Clicks the element with the given ref and returns a URL to a screenshot of the result.
+- **`browser_type(ref, text)`** — Types text into the element with the given ref and returns a URL to a screenshot of the result.
 - **`browser_end()`** — Closes the browser, finalizes the screen recording, and returns a URL to watch it.
 
 > [!NOTE]
