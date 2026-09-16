@@ -60,7 +60,7 @@ graph LR
    npm install
    npx playwright install --with-deps chromium
    ```
-3. Copy `.env.example` to `.env`. The `AWS_*` bucket variables are optional locally — you only need them to exercise `browser_end()`'s upload step; everything else works without a bucket configured. Leave `MCP_API_KEY` unset for local dev.
+3. Copy `.env.example` to `.env`.
 4. Start the server:
    ```
    npm run dev
