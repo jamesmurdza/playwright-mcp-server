@@ -2,14 +2,6 @@
 
 A remote MCP server for operating a real Chromium browser via Playwright, with session recordings stored automatically.
 
-```mermaid
-graph LR
-    Client["MCP Client"] -->|"POST /mcp"| Server["Playwright MCP<br/>Node + Chromium"]
-    subgraph "Railway Project"
-        Server -->|"S3 API"| Bucket[("Railway Bucket<br/>recordings/*.webm")]
-    end
-```
-
 ## Usage
 
 Ask your agent something like:
@@ -29,6 +21,16 @@ The final response includes a temporary link to the recording.
 
 > [!NOTE]
 > Only one browser session is allowed at a time per MCP session — call `browser_end()` before starting another.
+
+## Architecture
+
+```mermaid
+graph LR
+    Client["MCP Client"] -->|"POST /mcp"| Server["Playwright MCP<br/>Node + Chromium"]
+    subgraph "Railway Project"
+        Server -->|"S3 API"| Bucket[("Railway Bucket<br/>recordings/*.webm")]
+    end
+```
 
 ## Deploying on Railway
 
