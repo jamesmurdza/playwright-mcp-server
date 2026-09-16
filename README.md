@@ -6,9 +6,11 @@ A remote MCP server for operating a real Chromium browser via Playwright, with s
 
 Ask your agent something like:
 
-> "Open example.com, click 'More information', then end the browser session."
+> "Go to wikipedia.org, search for 'Model Context Protocol', click through to the Anthropic page, then end the session and give me the recording link."
 
-The final response includes a temporary link to the screen recording.
+The final response includes a temporary link to the screen recording:
+
+https://github.com/user-attachments/assets/41c43cee-6e5b-422b-a5b2-e079db11402d
 
 ## Available tools
 
