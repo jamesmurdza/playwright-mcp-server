@@ -97,7 +97,7 @@ export function createMcpServer(session: BrowserSession): McpServer {
     {
       title: "End browser session",
       description:
-        "Closes the browser, finalizes the video recording, uploads it to the configured bucket, and returns where it was stored. Always call this when you're done, even if something went wrong, so the recording isn't lost.",
+        "Closes the browser, finalizes the video recording, uploads it to the configured bucket, and returns a temporary (7-day) signed URL to watch or download it. Always call this when you're done, even if something went wrong, so the recording isn't lost.",
       inputSchema: {},
     },
     () => run(() => session.end()),

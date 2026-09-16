@@ -75,12 +75,25 @@ Once connected, ask your agent:
 
 > "Open example.com, click 'More information', then end the browser session."
 
-The agent will call `browser_start` → `browser_navigate` → `browser_snapshot` → `browser_click` → `browser_end`, and the final response will include the bucket key of the recording.
+The agent will call `browser_start` → `browser_navigate` → `browser_snapshot` → `browser_click` → `browser_end`, and the final response will include a link to watch the recording:
+
+```json
+{
+  "recording": {
+    "bucket": "your-bucket-name",
+    "key": "recordings/<session-id>-<file>.webm",
+    "bytes": 547607,
+    "url": "https://.../your-bucket-name/recordings/....webm?X-Amz-Algorithm=...",
+    "expiresAt": "2026-09-23T07:20:00.000Z"
+  }
+}
+```
 
 ## Recordings
 
 - Recordings are written to `/tmp/videos/<session-id>/` while the browser is running — this is scratch space only, not a persistent volume.
-- On `browser_end()`, the video is finalized, uploaded to `recordings/<session-id>-<file>.webm` in your bucket, and the local temp file/directory is deleted.
+- On `browser_end()`, the video is finalized and uploaded to `recordings/<session-id>-<file>.webm` in your bucket, and the local temp file/directory is deleted.
+- Railway Buckets aren't publicly readable, so `browser_end()` doesn't just return the bucket/key — it returns a **presigned URL** (`url`) that's directly openable in a browser without any credentials, valid until `expiresAt` (7 days from upload, the maximum a SigV4 presigned URL supports). Generate a fresh one later by presigning `GetObject` for the same `bucket`/`key` if you need longer-lived access.
 - If an MCP client disconnects without calling `browser_end()` (e.g. it crashes), the server still closes the browser and deletes the local temp recording on session teardown — but in that case the video is **not** uploaded, since there was no clean `browser_end()` call to trigger it. Always call `browser_end()` when you're finished.
 
 ## Architecture
