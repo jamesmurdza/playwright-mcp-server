@@ -95,6 +95,10 @@ export class BrowserSession {
   async navigate(url: string) {
     const page = this.assertActive();
     const response = await page.goto(url, { waitUntil: "domcontentloaded" });
+    // goto() only waits for *this* navigation. If the destination page
+    // immediately kicks off another one (client-side redirect, meta
+    // refresh, SPA routing), the screenshot below could still race it.
+    await this.settle(page);
     return {
       url: page.url(),
       status: response ? response.status() : null,
